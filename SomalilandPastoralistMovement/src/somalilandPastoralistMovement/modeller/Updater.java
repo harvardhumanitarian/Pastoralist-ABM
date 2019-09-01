@@ -51,10 +51,14 @@ public class Updater {
 		
 		seasonChangeFlag = false;
 		if(!SomalilandContextCreator.currentSeason.equals(season)) {
+			somalilandGeo.removeCoverage(ResourceConstants.SEASONAL_CONFLICT_LAYER_MINUS_1);
+			GridCoverage2D conflict_cvg = somalilandGeo.getCoverage(ResourceConstants.SEASONAL_CONFLICT_LAYER);
+			somalilandGeo.addCoverage(ResourceConstants.SEASONAL_CONFLICT_LAYER_MINUS_1, conflict_cvg);
 			somalilandGeo.removeCoverage(ResourceConstants.MODIS_LAYER);
+			somalilandGeo.removeCoverage(ResourceConstants.SEASONAL_CONFLICT_LAYER);
 			SomalilandContextCreator.currentSeason = season;
 			System.out.println("Updating Vegetation Layer.");
-			updateVegetationLayer();
+			updateSeasonalLayers();
 			seasonChangeFlag = true;
 		}
 		
@@ -77,11 +81,13 @@ public class Updater {
 		
 	}
 	
+	
 	Integer getRandomInRange(int length, int minInclusive, int maxExclusive) {
 		Random r = new Random();
 		return r.ints(minInclusive, (maxExclusive)).limit(1).findFirst().getAsInt();
 		//r.ints(length, minInclusive, maxExclusive).;
 	}
+	
 	
 	private Double getRandomInRange(int length, double minInclusive, double maxExclusive) {
 		Random r = new Random();
@@ -89,6 +95,7 @@ public class Updater {
 		//r.ints(length, minInclusive, maxExclusive).;
 	}
 
+	
 	/**
 	 * This method is designed to incorporate all functions required for moving the pastoralist agent. 
 	 * Chose the best location to move depending upon the method for calculating the score of favorability of the next location,
@@ -139,6 +146,7 @@ public class Updater {
         	}
         }
 	}
+
 	
 	/**
 	 * Additive model with normalized/stadardized scores of vegetation, conflict, etc layers
@@ -269,7 +277,6 @@ public class Updater {
 	}
 
 	
-	
 	private int getPrivateLandDealCode(int strike, double dealBreakingProbability) {
 		int dealCode = -99;
 		double prob1 = getRandomInRange(1, 0.00D, 1.00D);
@@ -284,6 +291,7 @@ public class Updater {
 		return dealCode;
 	}
 	
+	
 	Map<Double, String> getAdditiveModelScore(List<String> candidateLocations) {
 		Map<Double, String> scoreVsLocation = new HashMap<Double, String>();
 		somalilandGeo = SomalilandContextCreator.SomalilandGeographyObject;
@@ -291,7 +299,11 @@ public class Updater {
 			GridCoverage2D c1 = somalilandGeo.getCoverage(ResourceConstants.MODIS_LAYER);
 			GridCoverage2D c3 = somalilandGeo.getCoverage(ResourceConstants.MAN_MADE_WATER_LAYER);
 			GridCoverage2D c4 = somalilandGeo.getCoverage(ResourceConstants.SLOPE_LAYER);
-			GridCoverage2D c5 = somalilandGeo.getCoverage(ResourceConstants.CONFLICT_LAYER);
+			
+			//GridCoverage2D c5 = somalilandGeo.getCoverage(ResourceConstants.CONFLICT_LAYER);
+			
+			GridCoverage2D conflictCvg1 = somalilandGeo.getCoverage(ResourceConstants.SEASONAL_CONFLICT_LAYER_MINUS_1);
+			GridCoverage2D conflictCvg2 = somalilandGeo.getCoverage(ResourceConstants.SEASONAL_CONFLICT_LAYER);
 			
 			GridCoverage2D c2 = null;
 			if(SomalilandContextCreator.currentSeason.equals(ResourceConstants.GU_SPRING) ||
@@ -321,10 +333,21 @@ public class Updater {
 				
 				float v3 = ((float[]) c3.evaluate(pos))[0]; // man-made points
 				float v4 = (((float[]) c4.evaluate(pos))[0]); // slope of land
-				float v5 = (((float[]) c5.evaluate(pos))[0]); // conflict
 				
-				if(v5 < 0F)
-					v5=0;
+				//float v5 = (((float[]) c5.evaluate(pos))[0]); // conflict
+				float v5_1 = 0F; 
+				Envelope2D env5_1 = conflictCvg1.getEnvelope2D();
+				if(env5_1.contains(pos)) {
+					v5_1 = ((float[]) conflictCvg1.evaluate(pos))[0] / 2.0F;
+				} 
+					
+				float v5_2 = 0F;
+				Envelope2D env5_2 = conflictCvg2.getEnvelope2D();
+				if(env5_2.contains(pos)) {
+					v5_2 = ((float[]) conflictCvg2.evaluate(pos))[0];
+				}
+
+				float v5 = v5_1 + v5_2;
 				double score = v1 + v2 + v3 - (0.25 * v4) - v5;
 				scoreVsLocation.put(score, candidateLocations.get(i)); 
 				System.out.print(ndvi + " ; " + v1 +","+ v2 +"," + v3 +"," + v4 +"," + v5);
@@ -346,6 +369,7 @@ public class Updater {
 		return scoreVsLocation;
 	}
 
+	
 	private List<String> radialNeighborhood(double currentLatX, double currentLonY, Integer rangeKM, int pixelResolution) {
 		List<String> candidateLocations = new ArrayList<String>();
 		Double deltaLatitude = (rangeKM*0.0089);
@@ -462,27 +486,30 @@ public class Updater {
 		GridCoverage2D c2 = somalilandGeo.getCoverage(ResourceConstants.SURFACE_WATER_LAYER);
 		GridCoverage2D c3 = somalilandGeo.getCoverage(ResourceConstants.MAN_MADE_WATER_LAYER);
 		GridCoverage2D c4 = somalilandGeo.getCoverage(ResourceConstants.SLOPE_LAYER);
-		GridCoverage2D c5 = somalilandGeo.getCoverage(ResourceConstants.CONFLICT_LAYER);
+		//GridCoverage2D c5 = somalilandGeo.getCoverage(ResourceConstants.CONFLICT_LAYER);
 		GridCoverage2D c6 = somalilandGeo.getCoverage(ResourceConstants.BOUNDARY_CONTAINER);
+		
 		Envelope2D e1 = c1.getEnvelope2D();
 		Envelope2D e2 = c2.getEnvelope2D();
 		Envelope2D e3 = c3.getEnvelope2D();
 		Envelope2D e4 = c4.getEnvelope2D();
-		Envelope2D e5 = c5.getEnvelope2D();
+		//Envelope2D e5 = c5.getEnvelope2D();
 		Envelope2D e6 = c6.getEnvelope2D();
 		
 		for(String coords : candidateLocations) {
 			double lat = Double.parseDouble(coords.split(",")[0]);
 			double lon = Double.parseDouble(coords.split(",")[1]);
 			DirectPosition pos = new DirectPosition2D(lat, lon);
-			if(e6.contains(pos) && e1.contains(pos) && e2.contains(pos) && e3.contains(pos) && e4.contains(pos)
-					&& e5.contains(pos)) {
+			if(e6.contains(pos) && e1.contains(pos) && e2.contains(pos) 
+					&& e3.contains(pos) && e4.contains(pos) ) {
+					//&& e5.contains(pos)) {
 				double v1 = ((double[]) c1.evaluate(pos))[0];  //ndvi
 				float v3 = ((float[]) c3.evaluate(pos))[0]; // man-made points
 				float v4 = (((float[]) c4.evaluate(pos))[0]); // slope of land
-				float v5 = (((float[]) c5.evaluate(pos))[0]); // conflict
+				//float v5 = (((float[]) c5.evaluate(pos))[0]); // conflict
 				byte v6 = ((byte[]) c6.evaluate(pos))[0];  
-				if(v6 == 0 && v1 != Double.NaN && v3 != Float.NaN && v4 != Float.NaN && v5 != Float.NaN 
+				
+				if(v6 == 0 && v1 != Double.NaN && v3 != Float.NaN && v4 != Float.NaN  
 						&& v1 >= 0.0 && v3 >= 0 && v4 >= 0)
 					validLocs.add(coords);
 			} 
@@ -492,21 +519,27 @@ public class Updater {
 		return validLocs;
 	}
 
-	private void updateVegetationLayer() {
+	
+	private void updateSeasonalLayers() {
 		String modisPath = "D:\\HHI2019\\data\\NDVI_Files\\"; 
-		String modisFile = "";
+		String conflictPath = "D:\\HHI2019\\data\\conflict\\";
+		String modisFile = "", seasonalConflictFile = "";
 		switch (SomalilandContextCreator.currentSeason) {
 			case ResourceConstants.JILAAL_WINTER:
 				modisFile = modisPath + "DecMarch" + SomalilandContextCreator.currentDate.getYear() + ".tif";
+				seasonalConflictFile = conflictPath + "Final_Con1_J_" + SomalilandContextCreator.currentDate.getYear() + ".tif";
 				break;
 			case ResourceConstants.GU_SPRING:
 				modisFile = modisPath + "AprJune" + SomalilandContextCreator.currentDate.getYear() + ".tif";
+				seasonalConflictFile = conflictPath + "Final_Con1_G_" + SomalilandContextCreator.currentDate.getYear() + ".tif";
 				break;
 			case ResourceConstants.HAGAAR_SUMMER:
 				modisFile = modisPath + "JulySept" + SomalilandContextCreator.currentDate.getYear() + ".tif";
+				seasonalConflictFile = conflictPath + "Final_Con1_H_" + SomalilandContextCreator.currentDate.getYear() + ".tif";
 				break;
 			case ResourceConstants.DEYR_AUTUMN:
 				modisFile = modisPath + "OctNov" + SomalilandContextCreator.currentDate.getYear() + ".tif";
+				seasonalConflictFile = conflictPath + "Final_Con1_D_" + SomalilandContextCreator.currentDate.getYear() + ".tif";
 				break;
 			default:
 				System.out.println("******** ERROR: CANNOT FIND MODIS NDVI FILE");
@@ -516,6 +549,12 @@ public class Updater {
 		System.out.println("Reading MODIS NDVI VEGETATION raster file : seasonal layer");
 		somalilandGeo.addCoverage(ResourceConstants.MODIS_LAYER, utils.loadRasterFile(modisFile));
 
+		System.out.println("Reading Seasonal Conflict raster file : seasonal layer");
+		somalilandGeo.addCoverage(ResourceConstants.SEASONAL_CONFLICT_LAYER, utils.loadRasterFile(seasonalConflictFile));
+		
 		
 	}
+
+
+
 }

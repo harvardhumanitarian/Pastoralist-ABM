@@ -60,7 +60,6 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 		loadInitialLayers(context);
 		context.add(SomalilandGeographyObject);
 		
-		/*
 		// Primary updater agent with step() with priority=1
 		Updater u = new Updater();
 		context.add(u);
@@ -68,14 +67,14 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 		System.out.println("Loading pastoralist agent data");
 		//loadPastoralistAgentData(context);
 		loadPastoralistAgentDataFromCSV(context);
-		*/
 		
 		
+		/*
 		AgentGenerator ag = new AgentGenerator();
 		context.add(ag);
 		ag.GeneratePastoralistsAgents();
 		RunEnvironment.getInstance().endRun();
-		 
+		 */
 		
 		/*GridCoverage2D c6 = SomalilandGeographyObject.getCoverage(ResourceConstants.BOUNDARY_CONTAINER);
 		DirectPosition pos2 = new DirectPosition2D(43.314576561699994,10.562698003396227);
@@ -110,7 +109,7 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 
 	
 	private void loadPastoralistAgentDataFromCSV(Context<Object> context) {
-		int noAgents = 10;
+		int noAgents = 4;
 		Map<String,Integer> admin1VsNomadHH = new HashMap<String,Integer>();
 		admin1VsNomadHH.put("Awdal", noAgents);
 		admin1VsNomadHH.put("Woqooyi Galbeed", noAgents);
@@ -124,7 +123,7 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 		GeometryFactory fac = new GeometryFactory();
 		try {
 			//Files.readAllLines(Paths.get("D:\\HHI2019\\data\\pastrolists-v2.csv")).stream().filter(row -> !row.startsWith("id")).forEach(row -> {
-			BufferedReader br = new BufferedReader(new FileReader("D:\\HHI2019\\data\\pastrolists-v3.csv"));
+			BufferedReader br = new BufferedReader(new FileReader("D:\\HHI2019\\data\\pastoralist_v3\\pastrolists-v3.csv"));
 			String row = "";	
 			int k=1;
 			br.readLine(); //header
@@ -245,19 +244,24 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 		Parameters params = RunEnvironment.getInstance().getParameters();
 		currentSeason = monthVsSeason.get(Month.of((Integer)params.getValue("startMonth")));
 		String modisPath = "D:\\HHI2019\\data\\NDVI_Files\\"; 
-		String modisFile = "";
+		String conflictPath = "D:\\HHI2019\\data\\conflict\\";
+		String modisFile = "", seasonalConflictFile = "";
 		switch (currentSeason) {
 			case ResourceConstants.JILAAL_WINTER:
 				modisFile = modisPath + "DecMarch" + currentDate.getYear() + ".tif";
+				seasonalConflictFile = conflictPath + "Final_Con1_J_" + currentDate.getYear() + ".tif";
 				break;
 			case ResourceConstants.GU_SPRING:
 				modisFile = modisPath + "AprJune" + currentDate.getYear() + ".tif";
+				seasonalConflictFile = conflictPath + "Final_Con1_G_" + currentDate.getYear() + ".tif";
 				break;
 			case ResourceConstants.HAGAAR_SUMMER:
 				modisFile = modisPath + "JulySept" + currentDate.getYear() + ".tif";
+				seasonalConflictFile = conflictPath + "Final_Con1_H_" + currentDate.getYear() + ".tif";
 				break;
 			case ResourceConstants.DEYR_AUTUMN:
 				modisFile = modisPath + "OctNov" + currentDate.getYear() + ".tif";
+				seasonalConflictFile = conflictPath + "Final_Con1_D_" + currentDate.getYear() + ".tif";
 				break;
 			default:
 				System.out.println("******** ERROR: CANNOT FIND MODIS NDVI FILE");
@@ -274,6 +278,13 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 		System.out.println("Reading MODIS NDVI VEGETATION raster file : seasonal layer");
 		GridCoverage2D coverage1 = utils.loadRasterFile(modisFile);
 		SomalilandGeographyObject.addCoverage(ResourceConstants.MODIS_LAYER, coverage1);
+		
+		System.out.println("Reading Seasonal Conflict raster file : seasonal layer");
+		SomalilandGeographyObject.addCoverage(ResourceConstants.SEASONAL_CONFLICT_LAYER, utils.loadRasterFile(seasonalConflictFile));
+		
+		System.out.println("Reading Seasonal Conflict raster file : seasonal layer - 1");
+		SomalilandGeographyObject.addCoverage(ResourceConstants.SEASONAL_CONFLICT_LAYER_MINUS_1, 
+				utils.loadRasterFile(seasonalConflictFile));
 		
 	}
 

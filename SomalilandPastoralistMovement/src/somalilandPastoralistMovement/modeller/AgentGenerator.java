@@ -85,7 +85,7 @@ public class AgentGenerator {
 		admin1VsNomadHH.put("Bari", 19114);
 		admin1VsNomadHH.put("Nugaal", 33367);
 		
-		BufferedWriter bw = new BufferedWriter(new FileWriter("D:\\HHI2019\\data\\pastrolists-v2.csv"));
+		BufferedWriter bw = new BufferedWriter(new FileWriter("D:\\HHI2019\\data\\pastrolists-v-2.csv"));
 		bw.write("id,latX,lonY,admin1,ethnicity,clan\n");
 		long idnum = 1;
 		String somaliaAdmin1filename = "D:\\HHI2019\\data\\Som_Adm\\Somaliland_Adm1.shp";
