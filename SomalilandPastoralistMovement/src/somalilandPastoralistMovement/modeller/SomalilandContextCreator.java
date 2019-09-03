@@ -214,6 +214,11 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 		String conflictFile = "D:\\HHI2019\\data\\conflict\\Somaliland_Conflict.shp";
 		loadConflictData(conflictFile, context);
 		
+		// Ethnic buffers for potential conflict
+		System.out.println("Raster for Ethnic buffers for potential conflict");
+		GridCoverage2D coverage7 = utils.loadRasterFile("D:\\HHI2019\\data\\Modified Files\\EthnicityBuffer_1.tif");
+		SomalilandGeographyObject.addCoverage(ResourceConstants.ETHNIC_BUFFER, coverage7);
+		
 		// boundary containment raster of somaliland
 		System.out.println("Boundary containment raster of somaliland.");
 		GridCoverage2D coverage6 = utils.loadRasterFile("D:\\HHI2019\\data\\boundraster1\\boundraster1.tif");

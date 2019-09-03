@@ -304,6 +304,7 @@ public class Updater {
 			
 			GridCoverage2D conflictCvg1 = somalilandGeo.getCoverage(ResourceConstants.SEASONAL_CONFLICT_LAYER_MINUS_1);
 			GridCoverage2D conflictCvg2 = somalilandGeo.getCoverage(ResourceConstants.SEASONAL_CONFLICT_LAYER);
+			GridCoverage2D c6 = somalilandGeo.getCoverage(ResourceConstants.ETHNIC_BUFFER);
 			
 			GridCoverage2D c2 = null;
 			if(SomalilandContextCreator.currentSeason.equals(ResourceConstants.GU_SPRING) ||
@@ -340,17 +341,18 @@ public class Updater {
 				if(env5_1.contains(pos)) {
 					v5_1 = ((float[]) conflictCvg1.evaluate(pos))[0] / 2.0F;
 				} 
-					
 				float v5_2 = 0F;
 				Envelope2D env5_2 = conflictCvg2.getEnvelope2D();
 				if(env5_2.contains(pos)) {
 					v5_2 = ((float[]) conflictCvg2.evaluate(pos))[0];
 				}
-
 				float v5 = v5_1 + v5_2;
-				double score = v1 + v2 + v3 - (0.25 * v4) - v5;
+				
+				float v6 = ((float[]) c6.evaluate(pos))[0];
+				
+				double score = v1 + v2 + v3 - (0.25 * v4) - v5 - (0.25 * v6);
 				scoreVsLocation.put(score, candidateLocations.get(i)); 
-				System.out.print(ndvi + " ; " + v1 +","+ v2 +"," + v3 +"," + v4 +"," + v5);
+				System.out.print(ndvi + " ; " + v1 +","+ v2 +"," + v3 +"," + v4 +"," + v5 + "," + v6);
 				System.out.println(" --> score = " + score + " :: location = " + scoreVsLocation.get(score));
 				
 			}

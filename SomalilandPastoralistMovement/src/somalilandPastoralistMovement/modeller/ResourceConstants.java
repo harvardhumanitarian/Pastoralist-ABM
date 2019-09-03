@@ -21,6 +21,7 @@ public class ResourceConstants {
 	public final static String CONFLICT_LAYER = "CONFLICT_LAYER";
 	public final static String SEASONAL_CONFLICT_LAYER = "SEASONAL_CONFLICT_LAYER";
 	public final static String SEASONAL_CONFLICT_LAYER_MINUS_1 = "SEASONAL_CONFLICT_1";
+	public final static String ETHNIC_BUFFER = "ETHNIC_CONFLICT_BUFFERS";
 	
 	public final static double SAVI_INDEX_L = 0.5;
 	
