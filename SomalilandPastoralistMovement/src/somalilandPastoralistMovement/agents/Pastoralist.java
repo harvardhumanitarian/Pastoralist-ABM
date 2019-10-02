@@ -15,11 +15,14 @@ public class Pastoralist {
 	private boolean isPastoralist;
 	private int changeFromPastoralistTick;
 	
+	private String dropoutSeason;
+	
 	private String currentAdmin1Level;
 	private String currentAdmin2Level;
 	private String currentClan;
 	private String currentEthnicity;
 	private String currentStatus;
+	private int seasonalStrikes;
 	
 	private List<String> latLongPerTick;
 	
@@ -38,6 +41,8 @@ public class Pastoralist {
 		
 		this.isPastoralist = true;
 		this.changeFromPastoralistTick = -1;
+		this.seasonalStrikes = 0;
+		this.dropoutSeason = "";
 		
 		this.latLongPerTick = new ArrayList<String>();
 		
@@ -160,6 +165,26 @@ public class Pastoralist {
 
 	public void setLatLongPerTick(List<String> latLongPerTick) {
 		this.latLongPerTick = latLongPerTick;
+	}
+
+
+	public int getSeasonalStrikes() {
+		return seasonalStrikes;
+	}
+
+
+	public void setSeasonalStrikes(int seasonalStrikes) {
+		this.seasonalStrikes = seasonalStrikes;
+	}
+
+
+	public String getDropoutSeason() {
+		return dropoutSeason;
+	}
+
+
+	public void setDropoutSeason(String dropoutSeason) {
+		this.dropoutSeason = dropoutSeason;
 	}
 
 }

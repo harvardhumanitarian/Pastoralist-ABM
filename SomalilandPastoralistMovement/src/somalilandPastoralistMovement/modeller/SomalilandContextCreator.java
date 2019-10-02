@@ -109,7 +109,7 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 
 	
 	private void loadPastoralistAgentDataFromCSV(Context<Object> context) {
-		int noAgents = 4;
+		int noAgents = 10;
 		Map<String,Integer> admin1VsNomadHH = new HashMap<String,Integer>();
 		admin1VsNomadHH.put("Awdal", noAgents);
 		admin1VsNomadHH.put("Woqooyi Galbeed", noAgents);
@@ -156,24 +156,35 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 				p.setOriginAdmin1Level(admin1);
 				p.setOriginEthnicity(pts[4]);
 				p.setOriginClan(pts[5]);
+				
 				// get initial location score
 				Map<Double, String> scoreLocMap = u.getAdditiveModelScore(p.getLatLongPerTick());
 				List<Double> keyArray = new ArrayList<Double>(scoreLocMap.keySet());
-				Collections.sort(keyArray, Collections.reverseOrder());
-				initialLocation.add(0, scoreLocMap.get(keyArray.get(0)) + "," + keyArray.get(0) + ",0" );
+				//Collections.sort(keyArray, Collections.reverseOrder());
+				initialLocation.set(0, scoreLocMap.get(keyArray.get(0)) + "," + keyArray.get(0) + ",0,0" ); //lat,lon,score,strike,scoutRange
 				p.setLatLongPerTick(initialLocation);
+				
+				
 				context.add(p);
+				currentLoc = scoreLocMap.get(keyArray.get(0));
 				Geometry geom = fac.createPoint(new Coordinate(Double.parseDouble(currentLoc.split(",")[0]), Double.parseDouble(currentLoc.split(",")[1])));
 				SomalilandGeographyObject.move(p, geom);
+				
+				
 				/*
 				if(k==50)
 					break;
 				 */
+				
 				k++;
 			}
+			
 			br.close();
-			System.out.println("Total Agents = " + k);
+			System.out.println("Total Agents = " + (k-1));
+			
+			
 			//});
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

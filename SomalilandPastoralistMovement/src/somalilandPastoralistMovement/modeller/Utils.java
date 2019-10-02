@@ -65,9 +65,10 @@ public class Utils {
 		try {
 			for(Pastoralist p : pastoralists) {
 				BufferedWriter bw = new BufferedWriter(new FileWriter(basePath+"run-"+iteration+"-pastoralist-"+p.getPastoralistId()+".csv"));
-				bw.write("tickno,lat,lon,score,scoutRange"+newline);
+				bw.write("tickno,lat,lon,score,strikes,scoutRange"+newline);
 				int tickno = 0;
 				for(String coords_score : p.getLatLongPerTick()) {
+					coords_score = coords_score.substring(1, coords_score.length()-2);
 					bw.write(tickno + "," + coords_score+newline);
 					tickno++;
 				}

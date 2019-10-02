@@ -43,6 +43,7 @@ public class Updater {
 	public void step() {
 		currentTick = (int) RepastEssentials.GetTickCount();
 		SomalilandContextCreator.currentDate = SomalilandContextCreator.currentDate.plusMonths(1);
+		
 		int m = SomalilandContextCreator.currentDate.getMonthValue();
 		String season = SomalilandContextCreator.monthVsSeason.get(Month.of(m));
 		
@@ -67,6 +68,7 @@ public class Updater {
 		// task for every agent at every tick
 		movePastoralistAgent();
 		
+		// END SIMULATION CONDITION
 		if(currentTick == SomalilandContextCreator.totalTicks) {
 			IndexedIterable<Object> pIterator= context.getObjects(Pastoralist.class);   
 	        List<Pastoralist> pastoralists = new ArrayList<Pastoralist>();
@@ -78,7 +80,7 @@ public class Updater {
 			System.out.println("End of simulation.");
 			RunEnvironment.getInstance().endRun();
 		}
-		
+
 	}
 	
 	
@@ -101,7 +103,6 @@ public class Updater {
 	 * Chose the best location to move depending upon the method for calculating the score of favorability of the next location,
 	 * depending upon factors like vegetation and water availability etc.
 	 * We consider seasonality effect, vegetation availability, man-made water points and conflicts so far.
-	 * TODO: We need to add further movement restriction rules, depletion rates etc.
 	 * 
 	 */
 	@SuppressWarnings("unchecked")
@@ -112,37 +113,47 @@ public class Updater {
         List<Pastoralist> pastoralists = new ArrayList<Pastoralist>();
         for (Object o: pIterator){
         	Pastoralist p = (Pastoralist) o;
+        	if(seasonChangeFlag == true) {
+        		if(p.getSeasonalStrikes() >= 3) 
+        			p.setIsPastoralist(false);
+        		else 
+        			p.setSeasonalStrikes(0);
+        	}
         	pastoralists.add(p);
         }
         
         int k=1;
+        GeometryFactory fac = new GeometryFactory();
         for(Pastoralist p : pastoralists) {
         	System.out.println("PID: " + p.getPastoralistId() + " :: status : " + p.isThisPastoralist());
         	if(p.isThisPastoralist()) {
         		// calculate favorability score of locations in the scouting/grazing approx. monthly range, 
         		// and choose the location with highest score
+        		
         		Integer instantScoutingRange = getRandomInRange(1, SomalilandContextCreator.minScoutingRange, SomalilandContextCreator.maxScoutingRange+1); 
-        		String bestLatxLatyScore = getBestFavorabilityScoreLocation(instantScoutingRange, p);
-        		Geometry g = somalilandGeo.getGeometry(p);
-        		Coordinate coord = g.getCoordinate();
+        		
+        		List<Double> bestLatxLatyScoreStrikeScout = getBestFavorabilityScoreLocation(instantScoutingRange, p);
+        		
         		List<String> latLongPerTick = p.getLatLongPerTick();
-        		if(bestLatxLatyScore.equals(ResourceConstants.PASTORALIST_TO_IDP)) {
-        			p.setIsPastoralist(false);
+        		
+        		if(bestLatxLatyScoreStrikeScout.get(0) == ResourceConstants.PASTORALIST_TO_IDP) {
         			p.setChangeFromPastoralistTick(currentTick);
-        			latLongPerTick.add(currentTick, ResourceConstants.PASTORALIST_TO_IDP);
         		} else {
         			// move agent to the next location
-        			coord.x = Double.parseDouble(bestLatxLatyScore.split(",")[0]);
-        			coord.y = Double.parseDouble(bestLatxLatyScore.split(",")[1]);
-        			latLongPerTick.add(currentTick, bestLatxLatyScore+","+instantScoutingRange);
+        			Geometry g = somalilandGeo.getGeometry(p);
+        			Coordinate coord = g.getCoordinate();
+        			coord.x = bestLatxLatyScoreStrikeScout.get(0);
+        			coord.y = bestLatxLatyScoreStrikeScout.get(1);
+        			latLongPerTick.add(currentTick, bestLatxLatyScoreStrikeScout.toString());
         			p.setLatLongPerTick(latLongPerTick);
+        			g = fac.createPoint(coord);
         			somalilandGeo.move(p, g); 
         		}
-        		/*
-        		if(k==50) //TODO how many agents to process
-        			break;
+        		
+        		
+        		//if(k==2)
+        			//break;
         		k++;
-        		*/
         	}
         }
 	}
@@ -155,24 +166,26 @@ public class Updater {
 	 * @param p 
 	 * @return
 	 */
-	String getBestFavorabilityScoreLocation(Integer instantScoutingRange, Pastoralist thisPastoralist) {
+	List<Double> getBestFavorabilityScoreLocation(Integer instantScoutingRange, Pastoralist thisPastoralist) {
 		System.out.println("Scouting range: " + instantScoutingRange);
 		// get current location of the agent
     	String currentLatxLongy = thisPastoralist.getLatLongPerTick().get(currentTick-1);
+    	currentLatxLongy = currentLatxLongy.replace("[", ""); currentLatxLongy = currentLatxLongy.replace("]", "");
     	System.out.println("Current lat long : " + currentLatxLongy);
     	/*Geometry g = SomalilandGeographyObject.getGeometry(p);
     	Coordinate coord = g.getCoordinate();
     	currentLatxLongy = coord.x + "," + coord.y;*/
 		double currentLatX = Double.parseDouble(currentLatxLongy.split(",")[0]);
 		double currentLonY = Double.parseDouble(currentLatxLongy.split(",")[1]);
-		int pixelResolution = 1; // 1km is the raster pixel resolution
+		int pixelResolution = 2; // 1km is the raster pixel resolution
 		// Candidate locations are obtained by creating a nth order moore OR radial neighborhood at the scouting range
 		// get the lat,long of candidate locations.
-		List<String> candidateLocations = mooreNeighborhood(currentLatX, currentLonY, instantScoutingRange);
+		//List<String> candidateLocations = mooreNeighborhood(currentLatX, currentLonY, instantScoutingRange);
+		List<String> candidateLocations = radialNeighborhood(currentLatX, currentLonY, instantScoutingRange, pixelResolution);
 		
 		// get the SCORE by the additive model for each of these locations
+		System.out.println("Get Additive model scores");
 		Map<Double, String> scoreVsLocation = getAdditiveModelScore(candidateLocations);
-		
 		
 		List<Double> scoreKeyArray = new ArrayList<Double>(scoreVsLocation.keySet());
 		Collections.sort(scoreKeyArray, Collections.reverseOrder()); //highest to lowest score
@@ -210,58 +223,67 @@ public class Updater {
 			System.out.println("v2 : Candidate best score : " + bestCellLatLonScore);
 		} 
 		
-		int strike = 0;
-		bestCellLatLonScore = privateSettlementDeal(bestCellLatLonScore, scoreVsLocation, strike);
-		System.out.println("v3 : FINAL Candidate best score after private deal: " + bestCellLatLonScore);
+		bestCellLatLonScore = bestCellLatLonScore + "," + thisPastoralist.getSeasonalStrikes() + "," + instantScoutingRange;
+		String[] pts = bestCellLatLonScore.split(",");
+		List<Double> bestCell_LatLonScoreStrikeScout = new ArrayList<Double>(Collections.nCopies(5, -99999d));
+		bestCell_LatLonScoreStrikeScout.set(0,Double.parseDouble(pts[0])); bestCell_LatLonScoreStrikeScout.set(1,Double.parseDouble(pts[1])); // lat,lon - 0,1
+		bestCell_LatLonScoreStrikeScout.set(2,Double.parseDouble(pts[2])); // score - 2
+		bestCell_LatLonScoreStrikeScout.set(3,Double.parseDouble(pts[3])); // strike - 3
+		bestCell_LatLonScoreStrikeScout.set(4,(double)instantScoutingRange); // 4=scout range
+		bestCell_LatLonScoreStrikeScout = privateSettlementDeal(bestCell_LatLonScoreStrikeScout, scoreVsLocation);
+		System.out.println("v3 : FINAL Candidate best score after private deal: " + bestCell_LatLonScoreStrikeScout.toString());
 		
-		return bestCellLatLonScore;
+		return bestCell_LatLonScoreStrikeScout;
 	}
 
 
-	private String privateSettlementDeal(String bestCellLatLonScore, Map<Double, String> scoreVsLocation, int strike) {
+	private List<Double> privateSettlementDeal(List<Double> bestCell_LatLonScoreStrike, Map<Double, String> scoreVsLocation) {
 		System.out.println("privateSettlementDeal()");
-		String bestCell = bestCellLatLonScore;
 		List<Double> scoreKeyArray = new ArrayList<Double>(scoreVsLocation.keySet());
 		Collections.sort(scoreKeyArray, Collections.reverseOrder()); //highest to lowest score
 		
-		if(scoreVsLocation.size() == 1) {
-			bestCell = bestCellLatLonScore;
-			System.out.println("scoreVsLocation.size = 1");
-		}
-		else {
+		if(scoreVsLocation.size() != 1) {
 			GeometryFactory fac = new GeometryFactory();
-			Geometry geom = fac.createPoint(new Coordinate(Double.parseDouble(bestCellLatLonScore.split(",")[0]), Double.parseDouble(bestCellLatLonScore.split(",")[1])));
+			Geometry geom = fac.createPoint(new Coordinate(bestCell_LatLonScoreStrike.get(0), bestCell_LatLonScoreStrike.get(1)));
 			@SuppressWarnings({ "rawtypes", "unchecked" })
 			WithinQuery geoQuery1 = new WithinQuery(somalilandGeo, geom);
 			for (Object obj : geoQuery1.query()) {
 				int dealCode = 2; //public land default
 				if (obj instanceof PrivateLandSettlemets) {
-					//PrivateLandSettlemets pls = (PrivateLandSettlemets) obj;
-					//System.out.println(firstNextLoc + " :: this best point is in private settlements area :: " + pls.getAreaSqKm());
 					// wet season private land deal-making
 					if(SomalilandContextCreator.currentSeason.equals(ResourceConstants.GU_SPRING) || 
 							SomalilandContextCreator.currentSeason.equals(ResourceConstants.DEYR_AUTUMN)) {
-						dealCode = getPrivateLandDealCode(strike, 0.5);
+						dealCode = getPrivateLandDealCode((int) Math.round(bestCell_LatLonScoreStrike.get(3)), 0.5);
 					} else { // dry season private land deal-making
-						dealCode = getPrivateLandDealCode(strike, 0.25);
+						dealCode = getPrivateLandDealCode((int) Math.round(bestCell_LatLonScoreStrike.get(3)), 0.25);
 					}
+					
+					// ---------------------------------------------------------------------
+					
+					/*if(strike >= 3)  // dropout of pastoralist cycle
+						bestCell = ResourceConstants.PASTORALIST_TO_IDP;
+					}*/
 					System.out.println("Private deal code : " + dealCode);
 					if(dealCode == 1) { // deal
-						bestCell = bestCellLatLonScore;
-					} else if (dealCode == 0) { // dropout
-						bestCell = ResourceConstants.PASTORALIST_TO_IDP;
+						//bestCell_LatLonScoreStrike;
 					} else if(dealCode == -1) { // no deal
-						strike++;
+						bestCell_LatLonScoreStrike.set(3, bestCell_LatLonScoreStrike.get(3)+1);
 						// find new location 
-						System.out.println("Strike" + strike + " :: new location search initiated..");
+						System.out.println("Strike" + bestCell_LatLonScoreStrike.get(3) + " :: new location search initiated..");
 						System.out.println("No. of locs  " + scoreVsLocation.size());
-						double s = Double.parseDouble(bestCellLatLonScore.split(",")[2]);
+						double s = bestCell_LatLonScoreStrike.get(2);
 						scoreVsLocation.remove(s);
 						scoreKeyArray = new ArrayList<Double>(scoreVsLocation.keySet());
 						Collections.sort(scoreKeyArray, Collections.reverseOrder()); //highest to lowest score
-						bestCellLatLonScore = scoreVsLocation.get(scoreKeyArray.get(0)) + "," + scoreKeyArray.get(0);
-						System.out.println("New location =  " + bestCellLatLonScore + " :: size = " + scoreVsLocation.size());
-						bestCell = privateSettlementDeal(bestCellLatLonScore, scoreVsLocation, strike);
+						
+						bestCell_LatLonScoreStrike.set(0, Double.parseDouble(scoreVsLocation.get(scoreKeyArray.get(0)).split(",")[0]));
+								
+						//scoreVsLocation.get(scoreKeyArray.get(0)) + "," + scoreKeyArray.get(0);
+						
+						System.out.println("New location =  " + bestCell_LatLonScoreStrike + " :: size = " + scoreVsLocation.size());
+						
+						bestCell_LatLonScoreStrike = privateSettlementDeal(bestCell_LatLonScoreStrike, scoreVsLocation);
+					
 					} else {
 						System.out.println("**** ERROR: Invalid dealCode." + dealCode);
 					}
@@ -273,21 +295,19 @@ public class Updater {
 			}
 		}
 		
-		return bestCell;
+		return bestCell_LatLonScoreStrike;
+		
 	}
 
 	
 	private int getPrivateLandDealCode(int strike, double dealBreakingProbability) {
 		int dealCode = -99;
 		double prob1 = getRandomInRange(1, 0.00D, 1.00D);
-		if(prob1 > dealBreakingProbability) {  // NO DEAL to enter private land
-			if(strike == 2)  // dropout of pastoralist cycle
-				dealCode = 0;
-			else          // find new location to go
-				dealCode = -1;
-		} else 
-			dealCode = 1; // Yes to enter private land
-		
+		if(prob1 < dealBreakingProbability)   // NO DEAL to enter private land
+			dealCode = -1;          // find new location to go
+		else 
+			dealCode = 1;           // Yes to enter private land
+	
 		return dealCode;
 	}
 	

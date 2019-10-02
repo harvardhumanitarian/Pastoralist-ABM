@@ -1,8 +1,6 @@
 package somalilandPastoralistMovement.modeller;
 
 public class ResourceConstants {
-	
-	
 	public final static String RAIN = "rainySeason";
 	public final static String DRY = "drySeason";
 	
@@ -10,7 +8,6 @@ public class ResourceConstants {
 	public final static String HAGAAR_SUMMER = "summer"; // dry
 	public final static String DEYR_AUTUMN = "autumn"; // rain 
 	public final static String JILAAL_WINTER = "winter"; // dry
-
 	
 	public final static String MODIS_LAYER = "MODIS_NDVI";
 	public final static String SURFACE_WATER_LAYER = "SURFACE_WATER";
@@ -26,5 +23,5 @@ public class ResourceConstants {
 	public final static double SAVI_INDEX_L = 0.5;
 	
 
-	public final static String PASTORALIST_TO_IDP = "PastoralistToIDP";
+	public final static double PASTORALIST_TO_IDP = -99999;
 }
