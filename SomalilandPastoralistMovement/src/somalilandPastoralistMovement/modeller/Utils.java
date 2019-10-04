@@ -58,9 +58,8 @@ public class Utils {
 	}
 
 
-	public void writeOutput(List<Pastoralist> pastoralists, int iteration) {
+	public void writeOutput(List<Pastoralist> pastoralists, int iteration, String basePath) {
 		System.out.println("Writing simulation output");
-		String basePath = "D:\\HHI2019\\simulation-data\\";
 		String newline = "\n";
 		try {
 			for(Pastoralist p : pastoralists) {

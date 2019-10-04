@@ -76,7 +76,8 @@ public class Updater {
 	        	Pastoralist p = (Pastoralist) o;
 	        	pastoralists.add(p);
 	        }
-			utils.writeOutput(pastoralists, SomalilandContextCreator.iteration);
+	        String basePath = "D:\\HHI2019\\simulation-data\\awdal\\";
+			utils.writeOutput(pastoralists, SomalilandContextCreator.iteration, basePath);
 			System.out.println("End of simulation.");
 			RunEnvironment.getInstance().endRun();
 		}
@@ -543,8 +544,8 @@ public class Updater {
 
 	
 	private void updateSeasonalLayers() {
-		String modisPath = "D:\\HHI2019\\data\\NDVI_Files\\"; 
-		String conflictPath = "D:\\HHI2019\\data\\conflict\\";
+		String modisPath = SomalilandContextCreator.parentdir + "NDVI_Files\\"; 
+		String conflictPath = SomalilandContextCreator.parentdir + "conflict\\";
 		String modisFile = "", seasonalConflictFile = "";
 		switch (SomalilandContextCreator.currentSeason) {
 			case ResourceConstants.JILAAL_WINTER:
