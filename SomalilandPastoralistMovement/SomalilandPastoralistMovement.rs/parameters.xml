@@ -20,7 +20,7 @@
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter"/>
 	
 	<parameter name="endYear" displayName="End Year" type="int" 
-		defaultValue="2009" 
+		defaultValue="2014" 
 		isReadOnly="true" 
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter"/>	
 		

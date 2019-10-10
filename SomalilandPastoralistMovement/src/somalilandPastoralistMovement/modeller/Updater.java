@@ -76,7 +76,10 @@ public class Updater {
 	        	Pastoralist p = (Pastoralist) o;
 	        	pastoralists.add(p);
 	        }
-	        String basePath = "D:\\HHI2019\\simulation-data\\"+ SomalilandContextCreator.currentRunAdmin1;
+	        
+	        //String basePath = "D:\\HHI2019\\simulation-data\\"+ SomalilandContextCreator.currentRunAdmin1+"\\";
+	        String basePath = "C:\\Users\\saira\\Desktop\\SimulationData\\csvFiles\\"+ SomalilandContextCreator.currentRunAdmin1+"\\";
+	        
 			utils.writeOutput(pastoralists, SomalilandContextCreator.iteration, basePath);
 			System.out.println("End of simulation.");
 			RunEnvironment.getInstance().endRun();
@@ -131,9 +134,7 @@ public class Updater {
         		// calculate favorability score of locations in the scouting/grazing approx. monthly range, 
         		// and choose the location with highest score
         		
-        		Integer instantScoutingRange = getRandomInRange(1, SomalilandContextCreator.minScoutingRange, SomalilandContextCreator.maxScoutingRange+1); 
-        		
-        		List<Double> bestLatxLatyScoreStrikeScout = getBestFavorabilityScoreLocation(instantScoutingRange, p);
+        		List<Double> bestLatxLatyScoreStrikeScout = getBestFavorabilityScoreLocation(p);
         		
         		List<String> latLongPerTick = p.getLatLongPerTick();
         		
@@ -168,8 +169,9 @@ public class Updater {
 	 * @param p 
 	 * @return
 	 */
-	List<Double> getBestFavorabilityScoreLocation(Integer instantScoutingRange, Pastoralist thisPastoralist) {
-		System.out.println("Scouting range: " + instantScoutingRange);
+	List<Double> getBestFavorabilityScoreLocation(Pastoralist thisPastoralist) {
+		Integer instantScoutingRange = getRandomInRange(1, SomalilandContextCreator.minScoutingRange, SomalilandContextCreator.maxScoutingRange+1); 
+		System.out.println("Scouting range 1st val: " + instantScoutingRange);
 		// get current location of the agent
     	String currentLatxLongy = thisPastoralist.getLatLongPerTick().get(currentTick-1);
     	currentLatxLongy = currentLatxLongy.replace("[", ""); currentLatxLongy = currentLatxLongy.replace("]", "");
@@ -182,8 +184,15 @@ public class Updater {
 		int pixelResolution = 2; // 1km is the raster pixel resolution
 		// Candidate locations are obtained by creating a nth order moore OR radial neighborhood at the scouting range
 		// get the lat,long of candidate locations.
-		//List<String> candidateLocations = mooreNeighborhood(currentLatX, currentLonY, instantScoutingRange);
-		List<String> candidateLocations = radialNeighborhood(currentLatX, currentLonY, instantScoutingRange, pixelResolution);
+		List<String> candidateLocations = mooreNeighborhood(currentLatX, currentLonY, instantScoutingRange);
+		//List<String> candidateLocations = radialNeighborhood(currentLatX, currentLonY, instantScoutingRange, pixelResolution);
+		
+		while(candidateLocations.size() == 0) {
+			instantScoutingRange = getRandomInRange(1, SomalilandContextCreator.minScoutingRange, SomalilandContextCreator.maxScoutingRange+1); 
+			candidateLocations = mooreNeighborhood(currentLatX, currentLonY, instantScoutingRange);
+		}
+		
+		System.out.println("Final scout range chosen : " + instantScoutingRange);
 		
 		// get the SCORE by the additive model for each of these locations
 		System.out.println("Get Additive model scores");

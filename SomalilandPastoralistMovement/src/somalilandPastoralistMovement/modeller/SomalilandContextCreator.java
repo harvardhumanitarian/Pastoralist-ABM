@@ -48,7 +48,10 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 	static int totalTicks, iteration, minScoutingRange, maxScoutingRange;
 	static float samplingPercent;
 	static String currentSeason;
-	static String parentdir = "D:\\HHI2019\\data\\";
+	
+	//static String parentdir = "D:\\HHI2019\\data\\";
+	static String parentdir = "C:\\Users\\saira\\Desktop\\SimulationData\\data\\data\\";
+	
 	static String currentRunAdmin1 = "Awdal";   // Awdal ; Woqooyi Galbeed ; Toghdeer ; Sool ; Sanaag ; Bari ; Nugaal
 	
 	static LocalDate currentDate;
@@ -124,7 +127,7 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 		admin1VsNomadHH.put("Bari", 19114);
 		admin1VsNomadHH.put("Nugaal", 33367);
 		int noAgents = (int) (admin1VsNomadHH.get(currentRunAdmin1) * samplingPercent);
-		Set<Integer> indices = getRandomIndices(noAgents); //new ArrayList<Integer>();
+		Set<Integer> indices = getRandomIndices(admin1VsNomadHH.get(currentRunAdmin1)); //new ArrayList<Integer>();
 		Updater u = new Updater();
 		GeometryFactory fac = new GeometryFactory();
 		try {
