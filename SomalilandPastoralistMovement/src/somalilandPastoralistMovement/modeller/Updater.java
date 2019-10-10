@@ -76,7 +76,7 @@ public class Updater {
 	        	Pastoralist p = (Pastoralist) o;
 	        	pastoralists.add(p);
 	        }
-	        String basePath = "D:\\HHI2019\\simulation-data\\awdal\\";
+	        String basePath = "D:\\HHI2019\\simulation-data\\"+ SomalilandContextCreator.currentRunAdmin1;
 			utils.writeOutput(pastoralists, SomalilandContextCreator.iteration, basePath);
 			System.out.println("End of simulation.");
 			RunEnvironment.getInstance().endRun();
@@ -127,7 +127,7 @@ public class Updater {
         GeometryFactory fac = new GeometryFactory();
         for(Pastoralist p : pastoralists) {
         	System.out.println("PID: " + p.getPastoralistId() + " :: status : " + p.isThisPastoralist());
-        	if(p.isThisPastoralist()) {
+        	if(p.isThisPastoralist() == true) {
         		// calculate favorability score of locations in the scouting/grazing approx. monthly range, 
         		// and choose the location with highest score
         		
@@ -137,9 +137,9 @@ public class Updater {
         		
         		List<String> latLongPerTick = p.getLatLongPerTick();
         		
-        		if(bestLatxLatyScoreStrikeScout.get(0) == ResourceConstants.PASTORALIST_TO_IDP) {
+        		/*if(bestLatxLatyScoreStrikeScout.get(0) == ResourceConstants.PASTORALIST_TO_IDP) {
         			p.setChangeFromPastoralistTick(currentTick);
-        		} else {
+        		} else {*/
         			// move agent to the next location
         			Geometry g = somalilandGeo.getGeometry(p);
         			Coordinate coord = g.getCoordinate();
@@ -147,9 +147,10 @@ public class Updater {
         			coord.y = bestLatxLatyScoreStrikeScout.get(1);
         			latLongPerTick.add(currentTick, bestLatxLatyScoreStrikeScout.toString());
         			p.setLatLongPerTick(latLongPerTick);
+        			p.setSeasonalStrikes((int) (Math.round(bestLatxLatyScoreStrikeScout.get(3))));
         			g = fac.createPoint(coord);
         			somalilandGeo.move(p, g); 
-        		}
+        		//}
         		
         		
         		//if(k==2)

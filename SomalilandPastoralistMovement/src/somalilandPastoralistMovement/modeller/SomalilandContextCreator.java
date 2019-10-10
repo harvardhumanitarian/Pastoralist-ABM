@@ -10,11 +10,13 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.opengis.feature.simple.SimpleFeature;
@@ -44,8 +46,10 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 
 	static Map<Month, String> monthVsSeason = new HashMap<Month, String>();
 	static int totalTicks, iteration, minScoutingRange, maxScoutingRange;
+	static float samplingPercent;
 	static String currentSeason;
 	static String parentdir = "D:\\HHI2019\\data\\";
+	static String currentRunAdmin1 = "Awdal";   // Awdal ; Woqooyi Galbeed ; Toghdeer ; Sool ; Sanaag ; Bari ; Nugaal
 	
 	static LocalDate currentDate;
 	static Geography<Object> SomalilandGeographyObject;
@@ -111,88 +115,70 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 
 	
 	private void loadPastoralistAgentDataFromCSV(Context<Object> context) {
-		//int noAgents = 28511;
 		Map<String,Integer> admin1VsNomadHH = new HashMap<String,Integer>();
 		admin1VsNomadHH.put("Awdal", 28511);
-		/*admin1VsNomadHH.put("Woqooyi Galbeed", 43741);
+		admin1VsNomadHH.put("Woqooyi Galbeed", 43741);
 		admin1VsNomadHH.put("Togdheer", 24285);
 		admin1VsNomadHH.put("Sool", 28985);
 		admin1VsNomadHH.put("Sanaag", 47764);
 		admin1VsNomadHH.put("Bari", 19114);
-		admin1VsNomadHH.put("Nugaal", 33367);*/
-		
-		
+		admin1VsNomadHH.put("Nugaal", 33367);
+		int noAgents = (int) (admin1VsNomadHH.get(currentRunAdmin1) * samplingPercent);
+		Set<Integer> indices = getRandomIndices(noAgents); //new ArrayList<Integer>();
 		Updater u = new Updater();
 		GeometryFactory fac = new GeometryFactory();
 		try {
-			//Files.readAllLines(Paths.get("D:\\HHI2019\\data\\pastrolists-v2.csv")).stream().filter(row -> !row.startsWith("id")).forEach(row -> {
-			BufferedReader br = new BufferedReader(new FileReader(parentdir + "pastoralist_v3\\pastrolists-v3.csv"));
+			//BufferedReader br = new BufferedReader(new FileReader(parentdir + "pastoralist_v3\\pastrolists-v3.csv"));
+			BufferedReader br = new BufferedReader(new FileReader(parentdir + "pastoralist_v3\\"+currentRunAdmin1+".csv"));
 			String row = "";	
-			int k=1;
+			int k=0;
 			br.readLine(); //header
 			while((row = br.readLine()) != null) {
-				String[] pts = row.split(",");
-				String admin1 = pts[3];
-				
-				if(k == admin1VsNomadHH.get("Awdal"))
-					break;
-				
-/*
-				int totalSum = 0;
-				List<String> adminKeys = new ArrayList<String>(admin1VsNomadHH.keySet());
-				for(String ak : adminKeys) {
-					totalSum +=  admin1VsNomadHH.get(ak);
+				if(indices.contains(k)) {
+					String[] pts = row.split(",");
+					String admin1 = pts[3];
+	/*
+					int totalSum = 0;
+					List<String> adminKeys = new ArrayList<String>(admin1VsNomadHH.keySet());
+					for(String ak : adminKeys) {
+						totalSum +=  admin1VsNomadHH.get(ak);
+					}
+					if(totalSum <= 0)
+						break;
+					Integer ctr = admin1VsNomadHH.get(admin1);
+					if(ctr == 0) {
+						admin1VsNomadHH.put(admin1, 0);
+						continue;
+					}
+					ctr = ctr-1;
+					admin1VsNomadHH.put(admin1, ctr);
+	*/				
+					Pastoralist p =new Pastoralist(Integer.parseInt(pts[0]));
+					String currentLoc = Double.parseDouble(pts[1]) + "," + Double.parseDouble(pts[2]);
+					List<String> initialLocation = new ArrayList<String>();
+					initialLocation.add(0, currentLoc);
+					p.setLatLongPerTick(initialLocation);
+					p.setOriginAdmin1Level(admin1);
+					p.setOriginEthnicity(pts[4]);
+					p.setOriginClan(pts[5]);
+					
+					// get initial location score
+					Map<Double, String> scoreLocMap = u.getAdditiveModelScore(p.getLatLongPerTick());
+					List<Double> keyArray = new ArrayList<Double>(scoreLocMap.keySet());
+					//Collections.sort(keyArray, Collections.reverseOrder());
+					initialLocation.set(0, scoreLocMap.get(keyArray.get(0)) + "," + keyArray.get(0) + ",0,0" ); //lat,lon,score,strike,scoutRange
+					p.setLatLongPerTick(initialLocation);
+					
+					context.add(p);
+					currentLoc = scoreLocMap.get(keyArray.get(0));
+					Geometry geom = fac.createPoint(new Coordinate(Double.parseDouble(currentLoc.split(",")[0]), Double.parseDouble(currentLoc.split(",")[1])));
+					SomalilandGeographyObject.move(p, geom);
+					
+					k++;
 				}
-				if(totalSum <= 0)
-					break;
-				
-				
-				Integer ctr = admin1VsNomadHH.get(admin1);
-				if(ctr == 0) {
-					admin1VsNomadHH.put(admin1, 0);
-					continue;
-				}
-				ctr = ctr-1;
-				admin1VsNomadHH.put(admin1, ctr);
-				
-*/				
-				Pastoralist p =new Pastoralist(k);
-				String currentLoc = Double.parseDouble(pts[1]) + "," + Double.parseDouble(pts[2]);
-				List<String> initialLocation = new ArrayList<String>();
-				initialLocation.add(0, currentLoc);
-				p.setLatLongPerTick(initialLocation);
-				p.setOriginAdmin1Level(admin1);
-				p.setOriginEthnicity(pts[4]);
-				p.setOriginClan(pts[5]);
-				
-				// get initial location score
-				Map<Double, String> scoreLocMap = u.getAdditiveModelScore(p.getLatLongPerTick());
-				List<Double> keyArray = new ArrayList<Double>(scoreLocMap.keySet());
-				//Collections.sort(keyArray, Collections.reverseOrder());
-				initialLocation.set(0, scoreLocMap.get(keyArray.get(0)) + "," + keyArray.get(0) + ",0,0" ); //lat,lon,score,strike,scoutRange
-				p.setLatLongPerTick(initialLocation);
-				
-				
-				context.add(p);
-				currentLoc = scoreLocMap.get(keyArray.get(0));
-				Geometry geom = fac.createPoint(new Coordinate(Double.parseDouble(currentLoc.split(",")[0]), Double.parseDouble(currentLoc.split(",")[1])));
-				SomalilandGeographyObject.move(p, geom);
-				
-				
-				/*
-				if(k==50)
-					break;
-				 */
-				
-				k++;
 			}
-			
 			br.close();
-			System.out.println("Total Agents = " + (k-1));
-			
-			
-			//});
-			
+			System.out.println("Total Agents = " + noAgents + " for " + currentRunAdmin1);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -311,6 +297,24 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 				utils.loadRasterFile(seasonalConflictFile));
 		
 	}
+	
+	
+	private Set<Integer> getRandomIndices(int noAgents) {
+		Set<Integer> indices = new HashSet<Integer>(noAgents);
+		Random r = new Random(); 
+		int k=0;
+		while(true) {
+			int ridIndex = r.nextInt(noAgents);
+			if(!indices.contains(ridIndex)) {
+				k++;
+				indices.add(ridIndex);
+			}
+			if(k==noAgents)
+				break;
+		}
+		
+		return indices;
+	}
 
 	
 	private void loadBareSoilWaterShp(String soilWaterShpfile, Context<Object> context) {
@@ -369,11 +373,12 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 	private void initializeParams() {
 		try {
 			Parameters params = RunEnvironment.getInstance().getParameters();
+			int currentMonth = (Integer)params.getValue("startMonth");
 			minScoutingRange = (Integer)params.getValue("minScoutingRange");
 			maxScoutingRange = (Integer)params.getValue("maxScoutingRange");
 			int currentYear = (Integer)params.getValue("startYear");
 			int endYear = (Integer)params.getValue("endYear");
-			int currentMonth = (Integer)params.getValue("startMonth");
+			samplingPercent = (float) (((Integer)params.getValue("samplingPercent"))/100f);
 			totalTicks = (endYear-currentYear)*12;
 			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM");
 			Date cdate = formatter.parse(currentYear + "-" + currentMonth);

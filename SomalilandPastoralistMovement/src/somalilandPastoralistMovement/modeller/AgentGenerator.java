@@ -1,8 +1,12 @@
 package somalilandPastoralistMovement.modeller;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +56,110 @@ public class AgentGenerator {
 	Envelope2D e6;
 
 	
+	public static void main(String args[]) {
+		float samplingPercent = 0.1f;
+		int noSamples = 100;
+		String parentdir = "D:\\HHI2019\\data\\";
+		String fname = parentdir + "pastoralist_v3\\pastrolists-v3.csv";
+		String secParentDir = "D:\\HHI2019\\data\\pastoralist_v3\\";
+		
+		writeAdminWisePopFiles(fname, secParentDir);
+		
+		//sampledPastoralistFile(fname,samplingPercent,secParentDir);
+	}
 	
+	
+	private static void sampledPastoralistFile(String fname, float samplingPercent, String secParentDir) {
+
+		Map<String,Integer> admin1VsNomadHH = new HashMap<String,Integer>();
+		admin1VsNomadHH.put("Awdal", 28511);
+		admin1VsNomadHH.put("Woqooyi Galbeed", 43741);
+		admin1VsNomadHH.put("Togdheer", 24285);
+		admin1VsNomadHH.put("Sool", 28985);
+		admin1VsNomadHH.put("Sanaag", 47764);
+		admin1VsNomadHH.put("Bari", 19114);
+		admin1VsNomadHH.put("Nugaal", 33367);
+		
+		int noAgents = (int) (admin1VsNomadHH.get("Awdal") * samplingPercent);
+		
+		try {
+			//Files.readAllLines(Paths.get("D:\\HHI2019\\data\\pastrolists-v2.csv")).stream().filter(row -> !row.startsWith("id")).forEach(row -> {
+			BufferedReader br = new BufferedReader(new FileReader(fname));
+			String row = "";	
+			int k=1;
+			br.readLine(); //header
+			while((row = br.readLine()) != null) {
+				String[] pts = row.split(",");
+				String admin1 = pts[3];
+					
+				Pastoralist p =new Pastoralist(k);
+				String currentLoc = Double.parseDouble(pts[1]) + "," + Double.parseDouble(pts[2]);
+				List<String> initialLocation = new ArrayList<String>();
+				initialLocation.add(0, currentLoc);
+				p.setLatLongPerTick(initialLocation);
+				p.setOriginAdmin1Level(admin1);
+				p.setOriginEthnicity(pts[4]);
+				p.setOriginClan(pts[5]);
+				
+				k++;
+			}
+			
+			br.close();
+			System.out.println("Total Agents = " + (k-1));
+			
+			
+			//});
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	private static void writeAdminWisePopFiles(String fname, String secParentDir) {
+		Map<String,Integer> admin1VsNomadHH = new HashMap<String,Integer>();
+		admin1VsNomadHH.put("Awdal", 28511);
+		admin1VsNomadHH.put("Woqooyi Galbeed", 43741);
+		admin1VsNomadHH.put("Togdheer", 24285);
+		admin1VsNomadHH.put("Sool", 28985);
+		admin1VsNomadHH.put("Sanaag", 47764);
+		admin1VsNomadHH.put("Bari", 19114);
+		admin1VsNomadHH.put("Nugaal", 33367);
+		
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(fname));
+			String row = "";	
+			int k=1;
+			String header = br.readLine(); //header
+			String currentAdmin1 = "Bari";
+			List<String> adminRows = new ArrayList<String>();
+			while((row = br.readLine()) != null) {
+				String[] pts = row.split(",");
+				String admin1 = pts[3];
+				if(!currentAdmin1.equals(admin1)) {
+					System.out.println("Writing " + currentAdmin1);
+					Files.write(Paths.get(secParentDir+currentAdmin1+".csv"), adminRows);
+					
+					currentAdmin1 = admin1;
+					adminRows = new ArrayList<String>();
+					adminRows.add(header);
+				}
+				
+				adminRows.add(row);
+				
+			}
+			
+			System.out.println("Writing " + currentAdmin1);
+			Files.write(Paths.get(secParentDir+currentAdmin1+".csv"), adminRows);
+			br.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
+
+
 	/**
 	 * Generate agents at Admin 1 level that lie in somaliland
 	 */

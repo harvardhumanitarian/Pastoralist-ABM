@@ -6,6 +6,12 @@
 		defaultValue="1" 
 		isReadOnly="true" 
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
+	/>
+	
+	<parameter name="samplingPercent" displayName="Sampling percent per admin region" type="int" 
+		defaultValue="1" 
+		isReadOnly="true" 
+		converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
 		/>
 
 	<parameter name="startYear" displayName="Start Year" type="int" 
@@ -14,7 +20,7 @@
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter"/>
 	
 	<parameter name="endYear" displayName="End Year" type="int" 
-		defaultValue="2019" 
+		defaultValue="2009" 
 		isReadOnly="true" 
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter"/>	
 		
