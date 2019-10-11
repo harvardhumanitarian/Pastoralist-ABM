@@ -9,7 +9,7 @@
 	/>
 	
 	<parameter name="samplingPercent" displayName="Sampling percent per admin region" type="int" 
-		defaultValue="1" 
+		defaultValue="12" 
 		isReadOnly="true" 
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
 		/>

@@ -49,8 +49,8 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 	static float samplingPercent;
 	static String currentSeason;
 	
-	//static String parentdir = "D:\\HHI2019\\data\\";
-	static String parentdir = "C:\\Users\\saira\\Desktop\\SimulationData\\data\\data\\";
+	static String parentdir = "D:\\HHI2019\\data\\";
+	//static String parentdir = "C:\\Users\\saira\\Desktop\\SimulationData\\data\\data\\";
 	
 	static String currentRunAdmin1 = "Awdal";   // Awdal ; Woqooyi Galbeed ; Toghdeer ; Sool ; Sanaag ; Bari ; Nugaal
 	
@@ -126,17 +126,21 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 		admin1VsNomadHH.put("Sanaag", 47764);
 		admin1VsNomadHH.put("Bari", 19114);
 		admin1VsNomadHH.put("Nugaal", 33367);
+		System.out.println(samplingPercent);
 		int noAgents = (int) (admin1VsNomadHH.get(currentRunAdmin1) * samplingPercent);
-		Set<Integer> indices = getRandomIndices(admin1VsNomadHH.get(currentRunAdmin1)); //new ArrayList<Integer>();
+		System.out.println(noAgents);
+		Set<Integer> indices = getRandomIndices(noAgents, admin1VsNomadHH.get(currentRunAdmin1)); //new ArrayList<Integer>();
+		System.out.println(indices);
 		Updater u = new Updater();
 		GeometryFactory fac = new GeometryFactory();
 		try {
 			//BufferedReader br = new BufferedReader(new FileReader(parentdir + "pastoralist_v3\\pastrolists-v3.csv"));
 			BufferedReader br = new BufferedReader(new FileReader(parentdir + "pastoralist_v3\\"+currentRunAdmin1+".csv"));
 			String row = "";	
-			int k=0;
+			int k=-1;
 			br.readLine(); //header
 			while((row = br.readLine()) != null) {
+				k++;
 				if(indices.contains(k)) {
 					String[] pts = row.split(",");
 					String admin1 = pts[3];
@@ -176,8 +180,6 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 					currentLoc = scoreLocMap.get(keyArray.get(0));
 					Geometry geom = fac.createPoint(new Coordinate(Double.parseDouble(currentLoc.split(",")[0]), Double.parseDouble(currentLoc.split(",")[1])));
 					SomalilandGeographyObject.move(p, geom);
-					
-					k++;
 				}
 			}
 			br.close();
@@ -302,12 +304,12 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 	}
 	
 	
-	private Set<Integer> getRandomIndices(int noAgents) {
+	private Set<Integer> getRandomIndices(int noAgents, int totalAgents) {
 		Set<Integer> indices = new HashSet<Integer>(noAgents);
-		Random r = new Random(); 
+		Random r = new Random();
 		int k=0;
 		while(true) {
-			int ridIndex = r.nextInt(noAgents);
+			int ridIndex = r.nextInt(totalAgents);
 			if(!indices.contains(ridIndex)) {
 				k++;
 				indices.add(ridIndex);

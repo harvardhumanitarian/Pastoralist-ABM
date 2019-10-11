@@ -77,8 +77,8 @@ public class Updater {
 	        	pastoralists.add(p);
 	        }
 	        
-	        //String basePath = "D:\\HHI2019\\simulation-data\\"+ SomalilandContextCreator.currentRunAdmin1+"\\";
-	        String basePath = "C:\\Users\\saira\\Desktop\\SimulationData\\csvFiles\\"+ SomalilandContextCreator.currentRunAdmin1+"\\";
+	        String basePath = "D:\\HHI2019\\simulation-data\\"+ SomalilandContextCreator.currentRunAdmin1+"\\";
+	        //String basePath = "C:\\Users\\saira\\Desktop\\SimulationData\\csvFiles\\"+ SomalilandContextCreator.currentRunAdmin1+"\\";
 	        
 			utils.writeOutput(pastoralists, SomalilandContextCreator.iteration, basePath);
 			System.out.println("End of simulation.");
