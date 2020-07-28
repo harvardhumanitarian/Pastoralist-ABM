@@ -49,10 +49,12 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 	static float samplingPercent;
 	static String currentSeason;
 	
-	static String parentdir = "D:\\HHI2019\\data\\";
+	static String parentdir = "/n/holyscratch01/vanrooyen_lab/simulation_input/data1/data/data/";
+	//static String parentdir = "D:\\HHI2019\\data\\";
 	//static String parentdir = "C:\\Users\\saira\\Desktop\\SimulationData\\data\\data\\";
+	//static String parentdir = "C:\\HHI2019\\data\\";
 	
-	static String currentRunAdmin1 = "Awdal";   // Awdal ; Woqooyi Galbeed ; Toghdeer ; Sool ; Sanaag ; Bari ; Nugaal
+	static String currentRunAdmin1 = "WoqooyiGalbeed";   // Awdal ; WoqooyiGalbeed ; Togdheer ; Sool ; Sanaag ; Bari ; Nugaal
 	
 	static LocalDate currentDate;
 	static Geography<Object> SomalilandGeographyObject;
@@ -62,8 +64,12 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 	public Context<Object> build(Context<Object> context) {
 		context.setId("SomalilandPastoralistMovement");
 		iteration = 1;
+		GeographyParameters<Object> geoParams = new GeographyParameters<Object>();
+		//geoParams.setCrs("EPSG:32638");
 		SomalilandGeographyObject = GeographyFactoryFinder.createGeographyFactory(null)
-				.createGeography("SomalilandGeography", context, new GeographyParameters<Object>());
+				.createGeography("SomalilandGeography", context, geoParams);
+		
+		System.out.println("SomalilandGeographyObject.getCRS() = " + SomalilandGeographyObject.getCRS());
 		
 		initializeParams();
 		loadInitialLayers(context);
@@ -120,7 +126,7 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 	private void loadPastoralistAgentDataFromCSV(Context<Object> context) {
 		Map<String,Integer> admin1VsNomadHH = new HashMap<String,Integer>();
 		admin1VsNomadHH.put("Awdal", 28511);
-		admin1VsNomadHH.put("Woqooyi Galbeed", 43741);
+		admin1VsNomadHH.put("WoqooyiGalbeed", 43741);
 		admin1VsNomadHH.put("Togdheer", 24285);
 		admin1VsNomadHH.put("Sool", 28985);
 		admin1VsNomadHH.put("Sanaag", 47764);
@@ -135,7 +141,8 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 		GeometryFactory fac = new GeometryFactory();
 		try {
 			//BufferedReader br = new BufferedReader(new FileReader(parentdir + "pastoralist_v3\\pastrolists-v3.csv"));
-			BufferedReader br = new BufferedReader(new FileReader(parentdir + "pastoralist_v3\\"+currentRunAdmin1+".csv"));
+			//BufferedReader br = new BufferedReader(new FileReader(parentdir + "pastoralist_v3\\"+currentRunAdmin1+".csv"));
+			BufferedReader br = new BufferedReader(new FileReader(parentdir + "pastoralist_v3/"+currentRunAdmin1+".csv"));
 			String row = "";	
 			int k=-1;
 			br.readLine(); //header
@@ -143,7 +150,7 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 				k++;
 				if(indices.contains(k)) {
 					String[] pts = row.split(",");
-					String admin1 = pts[3];
+					String admin1 = pts[3]; //id,latX,lonY,admin1,ethnicity,clan
 	/*
 					int totalSum = 0;
 					List<String> adminKeys = new ArrayList<String>(admin1VsNomadHH.keySet());
@@ -170,16 +177,25 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 					p.setOriginClan(pts[5]);
 					
 					// get initial location score
+					System.out.println("currentLoc "+currentLoc);
 					Map<Double, String> scoreLocMap = u.getAdditiveModelScore(p.getLatLongPerTick());
 					List<Double> keyArray = new ArrayList<Double>(scoreLocMap.keySet());
 					//Collections.sort(keyArray, Collections.reverseOrder());
 					initialLocation.set(0, scoreLocMap.get(keyArray.get(0)) + "," + keyArray.get(0) + ",0,0" ); //lat,lon,score,strike,scoutRange
 					p.setLatLongPerTick(initialLocation);
-					
 					context.add(p);
 					currentLoc = scoreLocMap.get(keyArray.get(0));
 					Geometry geom = fac.createPoint(new Coordinate(Double.parseDouble(currentLoc.split(",")[0]), Double.parseDouble(currentLoc.split(",")[1])));
 					SomalilandGeographyObject.move(p, geom);
+					
+					/*Double lat = Double.parseDouble(p.getLatLongPerTick().get(0).split(",")[0]);
+					Double lon = Double.parseDouble(p.getLatLongPerTick().get(0).split(",")[1]);
+					initialLocation.set(0, lat + "," + lon + ",0,0,0" ); //lat,lon,score,strike,scoutRange
+					p.setLatLongPerTick(initialLocation);
+					context.add(p);
+					Geometry geom = fac.createPoint(new Coordinate(lat, lon));
+					SomalilandGeographyObject.move(p, geom);*/
+					
 				}
 			}
 			br.close();
@@ -192,27 +208,34 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 
 	private void loadInitialLayers(Context<Object> context) {
 		
+		System.out.println("loadInitialLayers()");
+		
 		// bare soil/water shp
 		System.out.println("Loading bare soil and  water data");
-		String soilWaterShpfile =  parentdir+"Som_BareSoil_Water\\Som_BareSoil_Water.shp";   
+		//String soilWaterShpfile =  parentdir+"Som_BareSoil_Water\\Som_BareSoil_Water.shp";   
+		String soilWaterShpfile =  parentdir+"Som_BareSoil_Water/Som_BareSoil_Water.shp";
 		loadBareSoilWaterShp(soilWaterShpfile, context);
 		
 		// Load admin2 layer into the geography Somaliland_Adm2.shp
 		System.out.println("Loading admin2level data");
-		String somaliaAdmin2filename = parentdir + "Som_Adm\\Somaliland_Adm2.shp";
+		//String somaliaAdmin2filename = parentdir + "Som_Adm\\Somaliland_Adm2.shp";
+		String somaliaAdmin2filename = parentdir + "Som_Adm/Somaliland_Adm2.shp";
 		loadAdmin2Layer(somaliaAdmin2filename, context);
 		
 		// ethnicity/clan shp
 		System.out.println("Loading Ethnicity/Clan data");
-		String ethnicityfilename =  parentdir + "Som_Ethnicity_Polygon\\Som_Ethnicity_Updated.shp";   //"D:\\HHI2019\\data\\Som_Ethicity\\Som_Ethicity.shp";
+		//String ethnicityfilename =  parentdir + "Som_Ethnicity_Polygon\\Som_Ethnicity_Updated.shp";   //"D:\\HHI2019\\data\\Som_Ethicity\\Som_Ethicity.shp";
+		String ethnicityfilename =  parentdir + "Som_Ethnicity_Polygon/Som_Ethnicity_Updated.shp";   
 		loadEthnicityData(ethnicityfilename, context);
 		
 		// livelihood zones (Somaliland_LivelihoodZones.shp) : static : 
-		String livelihoodFilename = parentdir + "Som_LivelihoodZones\\Somaliland_LivelihoodZones.shp";
+		//String livelihoodFilename = parentdir + "Som_LivelihoodZones\\Somaliland_LivelihoodZones.shp";
+		String livelihoodFilename = parentdir + "Som_LivelihoodZones/Somaliland_LivelihoodZones.shp";
 		loadLivelihoodZones(livelihoodFilename, context);
 		
 		// private land settlements buffer (Settlements_4k_14k_clip.shp) : static
-		String privateLandFile = parentdir + "Som_PrivateLand\\Settlements_4k_14k_clip.shp";
+		//String privateLandFile = parentdir + "Som_PrivateLand\\Settlements_4k_14k_clip.shp";
+		String privateLandFile = parentdir + "Som_PrivateLand/Settlements_4k_14k_clip.shp";
 		loadPrivateLandSettlements(privateLandFile, context);
 		
 		// load man-made water points : static 
@@ -220,46 +243,55 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 		loadAllStrategicWaterPoints(context);
 		
 		// conflict points : static -> load beyond start year
-		System.out.println("Conflict layer : yearly");
-		String conflictFile = parentdir + "conflict\\Somaliland_Conflict.shp";
-		loadConflictData(conflictFile, context);
+		//System.out.println("Conflict layer : yearly");
+		//String conflictFile = parentdir + "conflict\\Somaliland_Conflict.shp";
+		//String conflictFile = parentdir + "conflict/Somaliland_Conflict.shp";
+		//loadConflictData(conflictFile, context);
 		
 		// Ethnic buffers for potential conflict
 		System.out.println("Raster for Ethnic buffers for potential conflict");
-		GridCoverage2D coverage7 = utils.loadRasterFile(parentdir + "Modified Files\\EthnicityBuffer_1.tif");
+		//GridCoverage2D coverage7 = utils.loadRasterFile(parentdir + "Modified Files\\EthnicityBuffer_1.tif");
+		GridCoverage2D coverage7 = utils.loadRasterFile(parentdir + "Modified Files/EthnicityBuffer_1.tif");
 		SomalilandGeographyObject.addCoverage(ResourceConstants.ETHNIC_BUFFER, coverage7);
 		
 		// boundary containment raster of somaliland
 		System.out.println("Boundary containment raster of somaliland.");
-		GridCoverage2D coverage6 = utils.loadRasterFile(parentdir + "boundraster1\\boundraster1.tif");
+		//GridCoverage2D coverage6 = utils.loadRasterFile(parentdir + "boundraster1\\boundraster1.tif");
+		GridCoverage2D coverage6 = utils.loadRasterFile(parentdir + "boundraster1/boundraster1.tif");
 		SomalilandGeographyObject.addCoverage(ResourceConstants.BOUNDARY_CONTAINER, coverage6);
 		
 		// conflict 
-		System.out.println("Reading conflict 2009-2019 raster file.");
-		GridCoverage2D coverage5 = utils.loadRasterFile(parentdir + "conflict_2009-2019_raster_normalized\\conflict_2009-2019_raster_normalized.tif");
-		SomalilandGeographyObject.addCoverage(ResourceConstants.CONFLICT_LAYER, coverage5);
+		//System.out.println("Reading conflict 2009-2019 raster file.");
+		//GridCoverage2D coverage5 = utils.loadRasterFile(parentdir + "conflict_2009-2019_raster_normalized\\conflict_2009-2019_raster_normalized.tif");
+		//GridCoverage2D coverage5 = utils.loadRasterFile(parentdir + "conflict_2009-2019_raster_normalized/conflict_2009-2019_raster_normalized.tif");
+		//SomalilandGeographyObject.addCoverage(ResourceConstants.CONFLICT_LAYER, coverage5);
 		
 		// slope 
 		System.out.println("Reading slope raster file.");
-		GridCoverage2D coverage4 = utils.loadRasterFile(parentdir + "som_slope_normalized_tif\\som_slope_normalized.tif");//("D:\\HHI2019\\data\\som_slope_v2\\som_slope.tif");
+		//GridCoverage2D coverage4 = utils.loadRasterFile(parentdir + "som_slope_normalized_tif\\som_slope_normalized.tif");//("D:\\HHI2019\\data\\som_slope_v2\\som_slope.tif");
+		GridCoverage2D coverage4 = utils.loadRasterFile(parentdir + "som_slope_normalized_tif/som_slope_normalized.tif");
 		SomalilandGeographyObject.addCoverage(ResourceConstants.SLOPE_LAYER, coverage4);
 		
 		// Man-made water points
 		System.out.println("Reading man-made water points raster file.");
-		GridCoverage2D coverage3 = utils.loadRasterFile(parentdir + "som_normalized_waterpoints\\som_normalized_waterpoints.tif");
+		//GridCoverage2D coverage3 = utils.loadRasterFile(parentdir + "som_normalized_waterpoints\\som_normalized_waterpoints.tif");
+		GridCoverage2D coverage3 = utils.loadRasterFile(parentdir + "som_normalized_waterpoints/som_normalized_waterpoints.tif");
 		SomalilandGeographyObject.addCoverage(ResourceConstants.MAN_MADE_WATER_LAYER, coverage3);
 		
 		// Surface water data :: TODO get 2 rasters - dry and wet season. Load both of them in different layers and alter between
 		// them using current season indicator
 		System.out.println("Reading Surface water raster file ");
-		GridCoverage2D coverage2 = utils.loadRasterFile(parentdir + "SurfaceWater\\SurfaceWaterSomalia.tif");
+		//GridCoverage2D coverage2 = utils.loadRasterFile(parentdir + "SurfaceWater\\SurfaceWaterSomalia.tif");
+		GridCoverage2D coverage2 = utils.loadRasterFile(parentdir + "SurfaceWater/SurfaceWaterSomalia.tif");
 		SomalilandGeographyObject.addCoverage(ResourceConstants.SURFACE_WATER_LAYER, coverage2);
 		
 		// MODIS NDVI VEGETATION : seasonal layer
 		Parameters params = RunEnvironment.getInstance().getParameters();
 		currentSeason = monthVsSeason.get(Month.of((Integer)params.getValue("startMonth")));
-		String modisPath = parentdir + "NDVI_Files\\"; 
-		String conflictPath = parentdir + "conflict\\";
+		//String modisPath = parentdir + "NDVI_Files\\"; 
+		//String conflictPath = parentdir + "conflict\\";
+		String modisPath = parentdir + "NDVI_Files/"; 
+		String conflictPath = parentdir + "conflict/";
 		String modisFile = "", seasonalConflictFile = "";
 		switch (currentSeason) {
 			case ResourceConstants.JILAAL_WINTER:
@@ -290,14 +322,14 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 		// https://developers.google.com/earth-engine/datasets/catalog/MODIS_006_MOD13Q1
 		// The band descriptions confirm our understanding and crosscheck NDVI calculation by using v[3]=Red band :: v[4] = NIR band
 		//System.out.println("NDVI index = " + v[0]); 	
-		System.out.println("Reading MODIS NDVI VEGETATION raster file : seasonal layer");
+		System.out.println("Reading MODIS NDVI VEGETATION raster file : seasonal layer : "  + modisFile);
 		GridCoverage2D coverage1 = utils.loadRasterFile(modisFile);
 		SomalilandGeographyObject.addCoverage(ResourceConstants.MODIS_LAYER, coverage1);
 		
-		System.out.println("Reading Seasonal Conflict raster file : seasonal layer");
+		System.out.println("Reading Seasonal Conflict raster file : seasonal layer : " + seasonalConflictFile);
 		SomalilandGeographyObject.addCoverage(ResourceConstants.SEASONAL_CONFLICT_LAYER, utils.loadRasterFile(seasonalConflictFile));
 		
-		System.out.println("Reading Seasonal Conflict raster file : seasonal layer - 1");
+		System.out.println("Reading Seasonal Conflict raster file : seasonal layer - 1 : " + seasonalConflictFile);
 		SomalilandGeographyObject.addCoverage(ResourceConstants.SEASONAL_CONFLICT_LAYER_MINUS_1, 
 				utils.loadRasterFile(seasonalConflictFile));
 		
@@ -314,7 +346,8 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 				k++;
 				indices.add(ridIndex);
 			}
-			if(k==noAgents)
+			//if(k==noAgents)
+			if(k==5)
 				break;
 		}
 		
@@ -376,6 +409,7 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 
 	
 	private void initializeParams() {
+		System.out.println("Inside initializeParams()");
 		try {
 			Parameters params = RunEnvironment.getInstance().getParameters();
 			int currentMonth = (Integer)params.getValue("startMonth");
@@ -417,6 +451,7 @@ public class SomalilandContextCreator implements ContextBuilder<Object> {
 	 * @param context
 	 */
 	private void loadConflictData(String conflictFile, Context<Object> context) {
+		System.out.println("loadConflictData() :: " + conflictFile);
 		List<SimpleFeature> features = utils.loadFeaturesFromShapefile(conflictFile);
 		Parameters parm = RunEnvironment.getInstance().getParameters();
 		int startYear = (Integer)parm.getValue("startYear");

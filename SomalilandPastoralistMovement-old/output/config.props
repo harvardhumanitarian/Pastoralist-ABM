@@ -1,0 +1,9 @@
+model.archive = D:/RepastWorkspace/SomalilandPastoralistMovement/output/complete_model.jar
+batch.params.file = scenario.rs/batch_params.xml
+ssh.key_dir = C:/Users/Swapna/.ssh
+poll.frequency = 60.0
+model.output = D:/RepastWorkspace/SomalilandPastoralistMovement/output
+
+vm.arguments = 
+local.0.instances = 2
+local.0.working_directory = C:/Users/Swapna/AppData/Local/Temp/

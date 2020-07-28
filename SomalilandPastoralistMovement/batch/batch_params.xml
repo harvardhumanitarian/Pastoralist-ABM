@@ -1,1 +1,15 @@
-<?xml version="1.0" ?><sweep runs="3"><parameter name="scoutingRange" type="constant" constant_type="int" value="25"></parameter><parameter name="startMonth" type="constant" constant_type="int" value="1"></parameter><parameter name="startYear" type="constant" constant_type="int" value="2009"></parameter><parameter name="endYear" type="constant" constant_type="int" value="2015"></parameter></sweep>
+<?xml version="1.0" ?>
+<sweep runs="3">
+<parameter name="minScoutingRange" type="constant" constant_type="int" value="15">
+</parameter>
+<parameter name="maxScoutingRange" type="constant" constant_type="int" value="30">
+</parameter>
+<parameter name="samplingPercent" type="constant" constant_type="int" value="1">
+</parameter>
+<parameter name="startMonth" type="constant" constant_type="int" value="1">
+</parameter>
+<parameter name="startYear" type="constant" constant_type="int" value="2009">
+</parameter>
+<parameter name="endYear" type="constant" constant_type="int" value="2011">
+</parameter>
+</sweep>

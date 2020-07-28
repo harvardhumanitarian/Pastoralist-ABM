@@ -77,10 +77,11 @@ public class Updater {
 	        	pastoralists.add(p);
 	        }
 	        
-	        String basePath = "D:\\HHI2019\\simulation-data\\"+ SomalilandContextCreator.currentRunAdmin1+"\\";
+	        //String basePath = "C:\\HHI2019\\simulation-data\\"+ SomalilandContextCreator.currentRunAdmin1+"\\";
 	        //String basePath = "C:\\Users\\saira\\Desktop\\SimulationData\\csvFiles\\"+ SomalilandContextCreator.currentRunAdmin1+"\\";
-	        
+	        String basePath = "/n/holyscratch01/vanrooyen_lab/simulation_output/"+ SomalilandContextCreator.currentRunAdmin1+"/";
 			utils.writeOutput(pastoralists, SomalilandContextCreator.iteration, basePath);
+			
 			System.out.println("End of simulation.");
 			RunEnvironment.getInstance().endRun();
 		}
@@ -347,43 +348,58 @@ public class Updater {
 				Double lat = Double.parseDouble(candidateLocations.get(i).split(",")[0]);
 				Double lon = Double.parseDouble(candidateLocations.get(i).split(",")[1]);
 				DirectPosition pos = new DirectPosition2D(lat, lon);
+				//DirectPosition pos = new DirectPosition2D(lon, lat);
 				
+				/*
 				// vegetation modis NDVI index
+				System.out.println("c1 NDVI start");
 				double ndvi = ((double[]) c1.evaluate(pos))[0];  
-				
+				System.out.println("c1 NDVI");
+				*/
+
 				// SAVI Index: https://wiki.landscapetoolbox.org/doku.php/remote_sensing_methods:soil-adjusted_vegetation_index
 				double NIR = ((double[]) c1.evaluate(pos))[4]; 
-				double RED = ((double[]) c1.evaluate(pos))[3]; 
+				System.out.println("c1 NIR");
+				double RED = ((double[]) c1.evaluate(pos))[3];
+				System.out.println("c1 RED");
 				double v1= ((NIR-RED) * (1+ResourceConstants.SAVI_INDEX_L)) / (NIR + RED + ResourceConstants.SAVI_INDEX_L);
+				
 				
 				// activate surface water only in the rainy season
 				byte v2 = 0;
 				if(SomalilandContextCreator.currentSeason.equals(ResourceConstants.GU_SPRING) ||
 						SomalilandContextCreator.currentSeason.equals(ResourceConstants.DEYR_AUTUMN)) {
 					v2 = ((byte[]) c2.evaluate(pos))[0];  // surface water
+					System.out.println("c2");
 				} 
 				
 				float v3 = ((float[]) c3.evaluate(pos))[0]; // man-made points
+				System.out.println("c3");
 				float v4 = (((float[]) c4.evaluate(pos))[0]); // slope of land
+				System.out.println("c4");
 				
 				//float v5 = (((float[]) c5.evaluate(pos))[0]); // conflict
 				float v5_1 = 0F; 
 				Envelope2D env5_1 = conflictCvg1.getEnvelope2D();
 				if(env5_1.contains(pos)) {
 					v5_1 = ((float[]) conflictCvg1.evaluate(pos))[0] / 2.0F;
+					System.out.println("conflictCvg1");
 				} 
 				float v5_2 = 0F;
 				Envelope2D env5_2 = conflictCvg2.getEnvelope2D();
 				if(env5_2.contains(pos)) {
 					v5_2 = ((float[]) conflictCvg2.evaluate(pos))[0];
+					System.out.println("conflictCvg2");
 				}
 				float v5 = v5_1 + v5_2;
 				
 				float v6 = ((float[]) c6.evaluate(pos))[0];
+				System.out.println("c6");
 				
 				double score = v1 + v2 + v3 - (0.25 * v4) - v5 - (0.25 * v6);
 				scoreVsLocation.put(score, candidateLocations.get(i)); 
-				System.out.print(ndvi + " ; " + v1 +","+ v2 +"," + v3 +"," + v4 +"," + v5 + "," + v6);
+				//System.out.print(ndvi + " ; " + v1 +","+ v2 +"," + v3 +"," + v4 +"," + v5 + "," + v6);
+				System.out.print(v1 +","+ v2 +"," + v3 +"," + v4 +"," + v5 + "," + v6);
 				System.out.println(" --> score = " + score + " :: location = " + scoreVsLocation.get(score));
 				
 			}
@@ -554,8 +570,10 @@ public class Updater {
 
 	
 	private void updateSeasonalLayers() {
-		String modisPath = SomalilandContextCreator.parentdir + "NDVI_Files\\"; 
-		String conflictPath = SomalilandContextCreator.parentdir + "conflict\\";
+		//String modisPath = SomalilandContextCreator.parentdir + "NDVI_Files\\"; 
+		//String conflictPath = SomalilandContextCreator.parentdir + "conflict\\";
+		String modisPath = SomalilandContextCreator.parentdir + "NDVI_Files/"; 
+		String conflictPath = SomalilandContextCreator.parentdir + "conflict/";
 		String modisFile = "", seasonalConflictFile = "";
 		switch (SomalilandContextCreator.currentSeason) {
 			case ResourceConstants.JILAAL_WINTER:
